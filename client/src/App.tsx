@@ -49,6 +49,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
+  Activity,
   Bell,
   Files,
   FolderTree,
@@ -91,6 +92,7 @@ import {
   migrateFromLegacyAuth,
 } from "./lib/types/customHeaders";
 import MetadataTab from "./components/MetadataTab";
+import LoadTestTab from "./components/LoadTestTab";
 
 const CONFIG_LOCAL_STORAGE_KEY = "inspectorConfig_v1";
 
@@ -1068,6 +1070,13 @@ const App = () => {
                   <Settings className="w-4 h-4 mr-2" />
                   Metadata
                 </TabsTrigger>
+                <TabsTrigger
+                  value="loadtest"
+                  disabled={transportType !== "streamable-http"}
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  Load Test
+                </TabsTrigger>
               </TabsList>
 
               <div className="w-full">
@@ -1231,6 +1240,16 @@ const App = () => {
                     <MetadataTab
                       metadata={metadata}
                       onMetadataChange={handleMetadataChange}
+                    />
+                    <LoadTestTab
+                      tools={tools}
+                      serverUrl={sseUrl}
+                      headers={Object.fromEntries(
+                        customHeaders
+                          .filter((h) => h.enabled && h.name && h.value)
+                          .map((h) => [h.name, h.value]),
+                      )}
+                      transportType={transportType}
                     />
                   </>
                 )}
