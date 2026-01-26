@@ -1,6 +1,7 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import {
   LoadTestConfig,
-  LoadTestConnectionConfig,
   LoadTestMetrics,
   LoadTestState,
   LoadTestEvent,
@@ -9,7 +10,6 @@ import {
   LatencySample,
   TpsSample,
 } from "./types";
-import { ConnectionPool } from "./connectionPool";
 import { ToolSelector } from "./toolSelector";
 import { paramGenerator } from "./paramGenerator";
 
@@ -126,8 +126,7 @@ class StatsCollector {
  */
 export class LoadTestRunner {
   private config: LoadTestConfig;
-  private connectionConfig: LoadTestConnectionConfig;
-  private connectionPool: ConnectionPool | null = null;
+  private mcpClient: Client;
   private toolSelector: ToolSelector | null = null;
   private rateLimiter: RateLimiter | null = null;
   private statsCollector: StatsCollector;
@@ -146,12 +145,9 @@ export class LoadTestRunner {
   private shouldStop = false;
   private activeWorkers = 0;
 
-  constructor(
-    config: LoadTestConfig,
-    connectionConfig: LoadTestConnectionConfig,
-  ) {
+  constructor(config: LoadTestConfig, mcpClient: Client) {
     this.config = config;
-    this.connectionConfig = connectionConfig;
+    this.mcpClient = mcpClient;
     this.statsCollector = new StatsCollector();
   }
 
@@ -187,10 +183,6 @@ export class LoadTestRunner {
     this.shouldStop = false;
 
     // Initialize components
-    this.connectionPool = new ConnectionPool(
-      this.connectionConfig,
-      this.config.poolSize,
-    );
     this.toolSelector = new ToolSelector(
       this.config.toolConfigs,
       this.config.selectionStrategy,
@@ -224,13 +216,12 @@ export class LoadTestRunner {
     }, METRICS_UPDATE_INTERVAL_MS);
 
     try {
-      await this.connectionPool.initialize();
       await this.runWorkers();
     } catch (e) {
       this.state = "error";
       this.emit({ type: "error", error: e as Error });
     } finally {
-      await this.cleanup();
+      this.cleanup();
     }
   }
 
@@ -311,8 +302,19 @@ export class LoadTestRunner {
     const startTime = Date.now();
 
     try {
-      const result = await this.connectionPool!.callTool(toolName, params);
+      const result = await this.mcpClient.request(
+        {
+          method: "tools/call",
+          params: {
+            name: toolName,
+            arguments: params,
+          },
+        },
+        CallToolResultSchema,
+      );
       const endTime = Date.now();
+
+      const content = result.content as Array<{ type: string; text?: string }>;
 
       return {
         toolName,
@@ -321,9 +323,7 @@ export class LoadTestRunner {
         latencyMs: endTime - startTime,
         success: !result.isError,
         error: result.isError
-          ? (result.content as Array<{ type: string; text?: string }>)
-              .map((c) => c.text ?? "")
-              .join("")
+          ? content.map((c) => c.text ?? "").join("")
           : undefined,
         responseSize: JSON.stringify(result).length,
       };
@@ -456,7 +456,7 @@ export class LoadTestRunner {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    await this.cleanup();
+    this.cleanup();
   }
 
   /**
@@ -478,15 +478,10 @@ export class LoadTestRunner {
   /**
    * Cleanup resources
    */
-  private async cleanup(): Promise<void> {
+  private cleanup(): void {
     if (this.metricsInterval) {
       clearInterval(this.metricsInterval);
       this.metricsInterval = null;
-    }
-
-    if (this.connectionPool) {
-      await this.connectionPool.close();
-      this.connectionPool = null;
     }
   }
 

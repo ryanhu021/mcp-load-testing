@@ -182,16 +182,6 @@ export const EMPTY_METRICS: LoadTestMetrics = {
 };
 
 /**
- * Connection info for the load test
- */
-export interface LoadTestConnectionConfig {
-  /** URL of the MCP server */
-  serverUrl: string;
-  /** Custom headers to include in requests */
-  headers: Record<string, string>;
-}
-
-/**
  * Events emitted by the load test runner
  */
 export type LoadTestEvent =

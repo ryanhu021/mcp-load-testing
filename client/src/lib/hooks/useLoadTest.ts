@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
   LoadTestConfig,
-  LoadTestConnectionConfig,
   LoadTestMetrics,
   LoadTestState,
   ToolConfig,
@@ -14,8 +14,7 @@ import {
 import { LoadTestRunner } from "../loadTest/loadTestRunner";
 
 interface UseLoadTestOptions {
-  serverUrl: string;
-  headers: Record<string, string>;
+  mcpClient: Client | null;
 }
 
 interface UseLoadTestReturn {
@@ -48,8 +47,7 @@ interface UseLoadTestReturn {
 const MAX_RECENT_RESULTS = 100;
 
 export function useLoadTest({
-  serverUrl,
-  headers,
+  mcpClient,
 }: UseLoadTestOptions): UseLoadTestReturn {
   const [config, setConfig] = useState<LoadTestConfig>(
     DEFAULT_LOAD_TEST_CONFIG,
@@ -93,16 +91,15 @@ export function useLoadTest({
   }, []);
 
   const start = useCallback(async () => {
+    if (!mcpClient) {
+      throw new Error("MCP client not connected");
+    }
+
     if (runnerRef.current) {
       await runnerRef.current.stop();
     }
 
-    const connectionConfig: LoadTestConnectionConfig = {
-      serverUrl,
-      headers,
-    };
-
-    const runner = new LoadTestRunner(config, connectionConfig);
+    const runner = new LoadTestRunner(config, mcpClient);
     runnerRef.current = runner;
 
     // Subscribe to events
@@ -112,7 +109,7 @@ export function useLoadTest({
     setMetrics({ ...EMPTY_METRICS, state: "running" });
 
     await runner.start();
-  }, [config, serverUrl, headers, handleEvent]);
+  }, [config, mcpClient, handleEvent]);
 
   const stop = useCallback(async () => {
     if (runnerRef.current) {
