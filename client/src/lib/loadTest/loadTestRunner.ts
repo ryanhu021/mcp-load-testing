@@ -137,6 +137,7 @@ export class LoadTestRunner {
   private successfulRequests = 0;
   private failedRequests = 0;
   private perToolMetrics: Map<string, ToolMetrics> = new Map();
+  private perToolLatencies: Map<string, number[]> = new Map();
   private latencyHistory: LatencySample[] = [];
   private tpsHistory: TpsSample[] = [];
 
@@ -203,7 +204,11 @@ export class LoadTestRunner {
           avgLatencyMs: 0,
           minLatencyMs: Infinity,
           maxLatencyMs: 0,
+          p50LatencyMs: 0,
+          p95LatencyMs: 0,
+          p99LatencyMs: 0,
         });
+        this.perToolLatencies.set(tc.tool.name, []);
       }
     }
 
@@ -356,13 +361,18 @@ export class LoadTestRunner {
 
     // Update per-tool metrics
     const toolMetrics = this.perToolMetrics.get(result.toolName);
-    if (toolMetrics) {
+    const toolLatencies = this.perToolLatencies.get(result.toolName);
+    if (toolMetrics && toolLatencies) {
       toolMetrics.totalRequests++;
       if (result.success) {
         toolMetrics.successfulRequests++;
       } else {
         toolMetrics.failedRequests++;
       }
+
+      // Track latency for percentile calculations
+      toolLatencies.push(result.latencyMs);
+
       // Running average
       toolMetrics.avgLatencyMs =
         (toolMetrics.avgLatencyMs * (toolMetrics.totalRequests - 1) +
@@ -376,9 +386,24 @@ export class LoadTestRunner {
         toolMetrics.maxLatencyMs,
         result.latencyMs,
       );
+
+      // Calculate percentiles
+      toolMetrics.p50LatencyMs = this.getPercentile(toolLatencies, 50);
+      toolMetrics.p95LatencyMs = this.getPercentile(toolLatencies, 95);
+      toolMetrics.p99LatencyMs = this.getPercentile(toolLatencies, 99);
     }
 
     this.emit({ type: "result", result });
+  }
+
+  /**
+   * Calculate percentile from an array of values
+   */
+  private getPercentile(values: number[], p: number): number {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = Math.ceil((p / 100) * sorted.length) - 1;
+    return sorted[Math.max(0, index)];
   }
 
   /**
@@ -467,6 +492,7 @@ export class LoadTestRunner {
     this.successfulRequests = 0;
     this.failedRequests = 0;
     this.perToolMetrics.clear();
+    this.perToolLatencies.clear();
     this.latencyHistory = [];
     this.tpsHistory = [];
     this.statsCollector.reset();

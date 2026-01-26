@@ -137,6 +137,9 @@ export interface ToolMetrics {
   avgLatencyMs: number;
   minLatencyMs: number;
   maxLatencyMs: number;
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
 }
 
 /**

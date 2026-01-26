@@ -279,7 +279,10 @@ const LoadTestMetricsComponent = ({ metrics }: LoadTestMetricsProps) => {
                   <th className="text-right py-2 px-2">Requests</th>
                   <th className="text-right py-2 px-2">Success</th>
                   <th className="text-right py-2 px-2">Failed</th>
-                  <th className="text-right py-2 px-2">Avg Latency</th>
+                  <th className="text-right py-2 px-2">Avg</th>
+                  <th className="text-right py-2 px-2">P50</th>
+                  <th className="text-right py-2 px-2">P95</th>
+                  <th className="text-right py-2 px-2">P99</th>
                 </tr>
               </thead>
               <tbody>
@@ -300,6 +303,15 @@ const LoadTestMetricsComponent = ({ metrics }: LoadTestMetricsProps) => {
                     </td>
                     <td className="text-right py-2 px-2">
                       {formatNumber(tm.avgLatencyMs)} ms
+                    </td>
+                    <td className="text-right py-2 px-2">
+                      {formatNumber(tm.p50LatencyMs)} ms
+                    </td>
+                    <td className="text-right py-2 px-2">
+                      {formatNumber(tm.p95LatencyMs)} ms
+                    </td>
+                    <td className="text-right py-2 px-2">
+                      {formatNumber(tm.p99LatencyMs)} ms
                     </td>
                   </tr>
                 ))}
