@@ -31,7 +31,8 @@ interface LoadTestConfigProps {
   onSetDurationMode: (mode: DurationMode) => void;
   onSetRequestCount: (count: number) => void;
   onSetDurationSeconds: (seconds: number) => void;
-  onSetPoolSize: (size: number) => void;
+  // TODO: Re-enable when we add connection pooling support
+  // onSetPoolSize: (size: number) => void;
   onSetTargetTps: (tps: number | null) => void;
   onSetTpsEnabled: (enabled: boolean) => void;
 }
@@ -47,7 +48,7 @@ const LoadTestConfigComponent = ({
   onSetDurationMode,
   onSetRequestCount,
   onSetDurationSeconds,
-  onSetPoolSize,
+  // onSetPoolSize,
   onSetTargetTps,
   onSetTpsEnabled,
 }: LoadTestConfigProps) => {
@@ -306,7 +307,8 @@ const LoadTestConfigComponent = ({
         )}
       </div>
 
-      {/* Concurrency */}
+      {/* Concurrency - commented out since we reuse single mcpClient connection
+         TODO: Re-enable when we add connection pooling support
       <div className="space-y-2">
         <Label className="text-sm font-semibold">Concurrency (Pool Size)</Label>
         <div className="flex items-center gap-2">
@@ -325,6 +327,7 @@ const LoadTestConfigComponent = ({
           Number of concurrent connections to the MCP server (1-100)
         </p>
       </div>
+      */}
 
       {/* Target TPS */}
       <div className="space-y-2">

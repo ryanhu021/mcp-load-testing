@@ -23,7 +23,7 @@ const LoadTestTab = ({ tools, mcpClient, transportType }: LoadTestTabProps) => {
     setDurationMode,
     setRequestCount,
     setDurationSeconds,
-    setPoolSize,
+    // setPoolSize, // TODO: Re-enable when we add connection pooling support
     setTargetTps,
     setTpsEnabled,
     updateToolConfig,
@@ -90,7 +90,7 @@ const LoadTestTab = ({ tools, mcpClient, transportType }: LoadTestTabProps) => {
             onSetDurationMode={setDurationMode}
             onSetRequestCount={setRequestCount}
             onSetDurationSeconds={setDurationSeconds}
-            onSetPoolSize={setPoolSize}
+            // onSetPoolSize={setPoolSize} // TODO: Re-enable when we add connection pooling support
             onSetTargetTps={setTargetTps}
             onSetTpsEnabled={setTpsEnabled}
           />
