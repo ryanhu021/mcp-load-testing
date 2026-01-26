@@ -1,25 +1,54 @@
 import { TabsContent } from "@/components/ui/tabs";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { useLoadTest } from "@/lib/hooks/useLoadTest";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import LoadTestConfigComponent from "./LoadTestConfig";
 import LoadTestMetricsComponent from "./LoadTestMetrics";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { InspectorConfig } from "@/lib/configurationTypes";
+import { getMCPProxyAddress, getMCPProxyAuthToken } from "@/utils/configUtils";
 
 interface LoadTestTabProps {
   tools: Tool[];
-  serverUrl: string;
-  headers: Record<string, string>;
+  serverUrl: string; // The actual MCP server URL (not the proxy URL)
+  customHeaders: Record<string, string>; // User-configured custom headers
   transportType: "stdio" | "sse" | "streamable-http";
+  oauthAccessToken?: string;
+  inspectorConfig: InspectorConfig;
 }
 
 const LoadTestTab = ({
   tools,
   serverUrl,
-  headers,
+  customHeaders,
   transportType,
+  oauthAccessToken,
+  inspectorConfig,
 }: LoadTestTabProps) => {
+  // Compute the proxy URL for load testing
+  const proxyUrl = useMemo(() => {
+    const url = new URL(`${getMCPProxyAddress(inspectorConfig)}/mcp`);
+    url.searchParams.set("transportType", "streamable-http");
+    url.searchParams.set("url", serverUrl);
+    return url.toString();
+  }, [inspectorConfig, serverUrl]);
+
+  // Merge all headers: custom headers + proxy auth + OAuth token
+  const effectiveHeaders = useMemo(() => {
+    const { token: proxyAuthToken, header: proxyAuthHeader } =
+      getMCPProxyAuthToken(inspectorConfig);
+    return {
+      ...customHeaders,
+      ...(proxyAuthToken
+        ? { [proxyAuthHeader]: `Bearer ${proxyAuthToken}` }
+        : {}),
+      ...(oauthAccessToken
+        ? { Authorization: `Bearer ${oauthAccessToken}` }
+        : {}),
+    };
+  }, [inspectorConfig, customHeaders, oauthAccessToken]);
+
   const {
     config,
     metrics,
@@ -36,8 +65,8 @@ const LoadTestTab = ({
     stop,
     initializeToolConfigs,
   } = useLoadTest({
-    serverUrl,
-    headers,
+    serverUrl: proxyUrl,
+    headers: effectiveHeaders,
   });
 
   // Initialize tool configs when tools change

@@ -1244,12 +1244,14 @@ const App = () => {
                     <LoadTestTab
                       tools={tools}
                       serverUrl={sseUrl}
-                      headers={Object.fromEntries(
+                      customHeaders={Object.fromEntries(
                         customHeaders
                           .filter((h) => h.enabled && h.name && h.value)
                           .map((h) => [h.name, h.value]),
                       )}
                       transportType={transportType}
+                      oauthAccessToken={authState.oauthTokens?.access_token}
+                      inspectorConfig={config}
                     />
                   </>
                 )}
