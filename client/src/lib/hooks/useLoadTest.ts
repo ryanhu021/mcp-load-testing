@@ -27,6 +27,7 @@ interface UseLoadTestReturn {
   // Config setters
   setToolConfigs: (configs: ToolConfig[]) => void;
   updateToolConfig: (toolName: string, updates: Partial<ToolConfig>) => void;
+  selectAllTools: (enabled: boolean) => void;
   setSelectionStrategy: (strategy: LoadTestConfig["selectionStrategy"]) => void;
   setDurationMode: (mode: LoadTestConfig["durationMode"]) => void;
   setRequestCount: (count: number) => void;
@@ -139,6 +140,13 @@ export function useLoadTest({
     [],
   );
 
+  const selectAllTools = useCallback((enabled: boolean) => {
+    setConfig((prev) => ({
+      ...prev,
+      toolConfigs: prev.toolConfigs.map((tc) => ({ ...tc, enabled })),
+    }));
+  }, []);
+
   const setSelectionStrategy = useCallback(
     (strategy: LoadTestConfig["selectionStrategy"]) => {
       setConfig((prev) => ({ ...prev, selectionStrategy: strategy }));
@@ -194,6 +202,7 @@ export function useLoadTest({
     recentResults,
     setToolConfigs,
     updateToolConfig,
+    selectAllTools,
     setSelectionStrategy,
     setDurationMode,
     setRequestCount,

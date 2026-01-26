@@ -26,6 +26,7 @@ interface LoadTestConfigProps {
   onStart: () => void;
   onStop: () => void;
   onUpdateToolConfig: (toolName: string, updates: Partial<ToolConfig>) => void;
+  onSelectAllTools: (enabled: boolean) => void;
   onSetSelectionStrategy: (strategy: ToolSelectionStrategy) => void;
   onSetDurationMode: (mode: DurationMode) => void;
   onSetRequestCount: (count: number) => void;
@@ -41,6 +42,7 @@ const LoadTestConfigComponent = ({
   onStart,
   onStop,
   onUpdateToolConfig,
+  onSelectAllTools,
   onSetSelectionStrategy,
   onSetDurationMode,
   onSetRequestCount,
@@ -96,7 +98,31 @@ const LoadTestConfigComponent = ({
 
       {/* Tool Selection */}
       <div className="space-y-2">
-        <Label className="text-sm font-semibold">Tools to Test</Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-semibold">Tools to Test</Label>
+          {config.toolConfigs.length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isRunning}
+                onClick={() => onSelectAllTools(true)}
+                className="h-7 text-xs"
+              >
+                Select All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isRunning}
+                onClick={() => onSelectAllTools(false)}
+                className="h-7 text-xs"
+              >
+                Deselect All
+              </Button>
+            </div>
+          )}
+        </div>
         <div className="border rounded-lg divide-y max-h-64 overflow-y-auto">
           {config.toolConfigs.length === 0 ? (
             <p className="p-3 text-sm text-gray-500">

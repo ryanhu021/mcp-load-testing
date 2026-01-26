@@ -27,6 +27,7 @@ const LoadTestTab = ({ tools, mcpClient, transportType }: LoadTestTabProps) => {
     setTargetTps,
     setTpsEnabled,
     updateToolConfig,
+    selectAllTools,
     start,
     stop,
     initializeToolConfigs,
@@ -84,6 +85,7 @@ const LoadTestTab = ({ tools, mcpClient, transportType }: LoadTestTabProps) => {
             onStart={start}
             onStop={stop}
             onUpdateToolConfig={updateToolConfig}
+            onSelectAllTools={selectAllTools}
             onSetSelectionStrategy={setSelectionStrategy}
             onSetDurationMode={setDurationMode}
             onSetRequestCount={setRequestCount}
