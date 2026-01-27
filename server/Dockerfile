@@ -1,23 +1,23 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM --platform=linux/amd64 node:22-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json ./
+
+# Install dependencies (use npm install since this is a workspace package without its own lockfile)
+RUN npm install
+
+# Copy source code and TypeScript config
 COPY tsconfig.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
 COPY src/ ./src/
 
 # Build TypeScript
 RUN npm run build
 
 # Production stage
-FROM node:22-alpine AS production
+FROM --platform=linux/amd64 node:22-alpine AS production
 
 WORKDIR /app
 
@@ -25,10 +25,10 @@ WORKDIR /app
 RUN apk add --no-cache curl
 
 # Copy package files
-COPY package*.json ./
+COPY package.json ./
 
 # Install production dependencies only
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy built files from builder
 COPY --from=builder /app/build ./build

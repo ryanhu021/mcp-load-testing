@@ -4,6 +4,7 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as ecrassets from "aws-cdk-lib/aws-ecr-assets";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -148,6 +149,7 @@ export class McpInspectorStack extends cdk.Stack {
         path.join(__dirname, "../../server"),
         {
           file: "Dockerfile",
+          platform: ecrassets.Platform.LINUX_AMD64,
         },
       ),
       logging: ecs.LogDrivers.awsLogs({
