@@ -20,11 +20,18 @@ export const getMCPProxyAddress = (config: InspectorConfig): string => {
     return proxyFullAddress;
   }
 
-  // Check for proxy port from query params, fallback to default
-  const proxyPort =
-    getSearchParam("MCP_PROXY_PORT") || DEFAULT_MCP_PROXY_LISTEN_PORT;
+  // Check for proxy port from query params
+  const proxyPort = getSearchParam("MCP_PROXY_PORT");
 
-  return `${window.location.protocol}//${window.location.hostname}:${proxyPort}`;
+  // If no port specified and we're on HTTPS (likely CloudFront/deployed),
+  // assume proxy is at same origin (path-based routing via CloudFront)
+  if (!proxyPort && window.location.protocol === "https:") {
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+
+  // Local development: use explicit port
+  const port = proxyPort || DEFAULT_MCP_PROXY_LISTEN_PORT;
+  return `${window.location.protocol}//${window.location.hostname}:${port}`;
 };
 
 export const getMCPServerRequestTimeout = (config: InspectorConfig): number => {
